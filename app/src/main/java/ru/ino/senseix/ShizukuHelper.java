@@ -48,6 +48,16 @@ public class ShizukuHelper {
 	
 	private final Handler ui = new Handler(Looper.getMainLooper());
 	
+	/* ================= WIRELESS (InoAdb) ================= */
+	
+	private static final String PREF = "senseix_activation";
+	private static final String RC_TAG = "__INO_RC__";
+	private volatile boolean wirelessActive = false;
+	private volatile boolean wirelessCancelled = false;
+	private volatile InoAdb.Client wirelessClient;
+	private volatile boolean restoring = false;
+	private long lastRestoreTry = 0;
+	
 	/* ================= CALLBACK ================= */
 	
 	public interface Callback {
@@ -97,6 +107,96 @@ public class ShizukuHelper {
 	public boolean isPermissionGranted() { return permissionGranted; }
 	public boolean isShizukuReady() { return binderReady && permissionGranted; }
 	public boolean isRunning() { return isRunning; }
+	
+	/* ================= MODE AKTIVASI ================= */
+	
+	public boolean isWirelessActive() { return wirelessActive; }
+	
+	/** True kalau salah satu mode (Wireless atau Shizuku) siap menjalankan perintah. */
+	public boolean isActivated() { return wirelessActive || isShizukuReady(); }
+	
+	public void setWirelessActive(boolean on) {
+		wirelessActive = on;
+		if (on) saveMode("wireless");
+	}
+	
+	/** Dipanggil saat pengguna memilih Shizuku di dialog aktivasi. */
+	public void selectShizukuMode() {
+		wirelessActive = false;
+		saveMode("shizuku");
+	}
+	
+	private void saveMode(String m) {
+		activity.getSharedPreferences(PREF, Activity.MODE_PRIVATE).edit().putString("mode", m).apply();
+	}
+	
+	/** Kalau mode terakhir Wireless, coba sambung diam-diam (tanpa UI). Aman dipanggil berulang. */
+	public void restoreSavedMode() {
+		if (wirelessActive || restoring) return;
+		if (Build.VERSION.SDK_INT < 30) return;
+		if (!"wireless".equals(activity.getSharedPreferences(PREF, Activity.MODE_PRIVATE).getString("mode", ""))) return;
+		if (!InoAdb.isPaired(activity)) return;
+		long now = System.currentTimeMillis();
+		if (now - lastRestoreTry < 15000) return;
+		lastRestoreTry = now;
+		restoring = true;
+		new Thread(() -> {
+			boolean ok = false;
+			try { ok = InoService.isAuthorized(activity, 4000); } catch (Throwable ignored) {}
+			final boolean res = ok;
+			ui.post(() -> { if (res) wirelessActive = true; });
+			restoring = false;
+		}).start();
+	}
+	
+	/* ================= EKSEKUSI VIA WIRELESS ================= */
+	
+	private static String shq(String s) {
+		return "'" + s.replace("'", "'\\''") + "'";
+	}
+	
+	private void runWireless(final String cmd, final Callback callback) {
+		wirelessCancelled = false;
+		InoAdb.Client c = null;
+		try {
+			try {
+				c = InoService.openClient(activity, new InoAdb.Out() { public void line(String s) {} });
+			} catch (Exception e) {
+				wirelessActive = false; // Wireless debugging mati / tidak terjangkau
+				ui.post(() -> callback.onFinish("Wireless debugging disconnected : " + e.getMessage()));
+				return;
+			}
+			wirelessClient = c;
+			String script = "cd " + shq(currentDir) + " 2>/dev/null\n" + cmd + "\necho \"" + RC_TAG + "$?\"";
+			String out = c.shell(script);
+			if (wirelessCancelled) throw new java.io.IOException("cancelled");
+			
+			int code = 0;
+			int i = out.lastIndexOf(RC_TAG);
+			if (i >= 0) {
+				try { code = Integer.parseInt(out.substring(i + RC_TAG.length()).trim()); } catch (Exception ignored) {}
+				out = out.substring(0, i);
+			}
+			out = out.replace("\r", "");
+			if (out.endsWith("\n")) out = out.substring(0, out.length() - 1);
+			if (out.length() > 0) {
+				for (String l : out.split("\n", -1)) {
+					final String line = l;
+					ui.post(() -> callback.onOutput(line));
+				}
+			}
+			final int fc = code;
+			ui.post(() -> callback.onFinish("Exit code : " + fc));
+		} catch (Exception e) {
+			final String msg = wirelessCancelled ? "cancelled" : e.getMessage();
+			ui.post(() -> callback.onFinish("Process interrupted / Error : " + msg));
+		} finally {
+			if (c != null) c.close();
+			wirelessClient = null;
+			closeInputWriter();
+			isRunning = false;
+		}
+	}
 	
 	/* ================= PERMISSION ================= */
 	
@@ -230,6 +330,10 @@ public class ShizukuHelper {
 		isRunning = true;
 		
 		new Thread(() -> {
+			if (wirelessActive) {
+				runWireless(finalCommand, callback);
+				return;
+			}
 			BufferedReader reader = null;
 			BufferedReader errorReader = null;
 			boolean useShizuku = isShizukuReady();
@@ -337,6 +441,9 @@ public class ShizukuHelper {
 	}
 	
 	public void destroy() {
+		wirelessCancelled = true;
+		InoAdb.Client wc = wirelessClient;
+		if (wc != null) wc.close();
 		closeInputWriter();
 		if (shizukuProcess != null) {
 			try { shizukuProcess.destroy(); } catch (Exception ignored) {}

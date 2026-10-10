@@ -48,7 +48,6 @@
   "text_temp": "Pantau Suhu",
   "text_fps": "Pantau FPS",
   "text_time": "Pantau Waktu",
-
   "page_home_title": "Beranda",
   "page_home_subtitle": "Menu dasbor",
   "page_apps_title": "Aplikasi",
@@ -76,7 +75,6 @@
   "shizuku_denied_title": "Layanan Tidak Ditemukan",
   "shizuku_denied_subtitle": "SenseiX Offline",
   "shizuku_denied_message": "Pastikan Layanan SenseiX sedang Online.",
-
   "about_title": "IqwanoINO",
   "about_subtitle": "Developer | Maintainer",
   "about_quote": "“Kreativitas Adalah Segalanya”",
@@ -84,7 +82,6 @@
   "about_btn_telegram": "Telegram",
   "about_btn_donation": "Dukungan / Donasi",
   "about_avatar_desc": "Avatar developer",
-
   "colorpicker_title": "Kustomisasi Warna Tema",
   "colorpicker_subtitle": "Pilih warna tema yang sesuai dengan seleramu",
   "colorpicker_hex_hint": "Contoh: #FFFFFF",
@@ -95,14 +92,25 @@
   "colorpicker_reset_message": "Yakin ingin mengatur ulang tema aplikasi ke default? Proses ini mengharuskan kamu keluar dari aplikasi.",
   "dialog_confirm_action": "Konfirmasi Tindakan",
   "btn_proceed": "Lanjutkan",
-
   "overlay_title": "Izin Diperlukan",
   "overlay_subtitle": "Tampilkan di Atas Aplikasi Lain",
   "overlay_message": "SenseiX memerlukan izin 'Tampilkan di atas aplikasi lain' agar optimalisasi performa dan overlay real-time dapat berjalan lancar di latar belakang.\n\n• Menampilkan statistik performa secara real-time\n• Mencegah proses optimalisasi dihentikan oleh sistem\n• Sepenuhnya aman dan tidak mengumpulkan data pribadi",
   "btn_grant_permission": "Berikan Izin",
-  
   "itemsetting_language_title": "Bahasa",
   "itemsetting_language_subtitle": "Ganti bahasa aplikasi",
   "language_dialog_title": "Pilih Bahasa",
-  "language_dialog_subtitle": "Langsung diterapkan tanpa restart"
+  "language_dialog_subtitle": "Langsung diterapkan tanpa restart",
+  "act_dialog_title": "Aktivasi SenseiX",
+  "act_dialog_subtitle": "Pilih cara mengaktifkan SenseiX",
+  "act_shizuku_desc": "Pakai Shizuku yang sudah berjalan. Cepat, tanpa pairing.",
+  "act_wireless_desc": "Tanpa Shizuku, lewat Wireless debugging. Butuh Wi-Fi.",
+  "act_status_shizuku_on": "Shizuku berjalan",
+  "act_status_shizuku_perm": "Izin Shizuku diperlukan",
+  "act_status_shizuku_off": "Shizuku belum berjalan",
+  "act_status_unsupported": "Tidak didukung (butuh Android 11+)",
+  "act_status_paired": "Sudah dipasangkan",
+  "act_status_need_pair": "Perlu pairing sekali",
+  "act_cancel": "Batal",
+  "act_wireless_hint": "Buka Wireless debugging > Pairkan perangkat dengan kode pairing, lalu ketik kodenya di notifikasi.",
+  "act_wireless_ok": "Mode Wireless aktif"
 }

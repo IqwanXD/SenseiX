@@ -48,7 +48,6 @@
   "text_temp": "Температура",
   "text_fps": "FPS",
   "text_time": "Время",
-
   "page_home_title": "Главная",
   "page_home_subtitle": "Панель управления",
   "page_apps_title": "Приложения",
@@ -76,7 +75,6 @@
   "shizuku_denied_title": "Служба не найдена",
   "shizuku_denied_subtitle": "SenseiX не в сети",
   "shizuku_denied_message": "Убедитесь, что служба SenseiX запущена.",
-
   "about_title": "IqwanoINO",
   "about_subtitle": "Разработчик | Мейнтейнер",
   "about_quote": "«Творчество — это всё»",
@@ -84,7 +82,6 @@
   "about_btn_telegram": "Telegram",
   "about_btn_donation": "Поддержка / Пожертвование",
   "about_avatar_desc": "Аватар разработчика",
-
   "colorpicker_title": "Настройка цвета темы",
   "colorpicker_subtitle": "Выберите цвет темы по своему вкусу",
   "colorpicker_hex_hint": "Пример: #FFFFFF",
@@ -95,14 +92,25 @@
   "colorpicker_reset_message": "Вы уверены, что хотите сбросить тему приложения по умолчанию? Для этого потребуется закрыть приложение.",
   "dialog_confirm_action": "Подтвердите действие",
   "btn_proceed": "Продолжить",
-
   "overlay_title": "Требуется разрешение",
   "overlay_subtitle": "Поверх других приложений",
   "overlay_message": "SenseiX требуется разрешение «Поверх других приложений», чтобы оптимизация производительности и оверлеи в реальном времени стабильно работали в фоновом режиме.\n\n• Показывает статистику производительности в реальном времени\n• Не даёт системе завершить процесс оптимизации\n• Полностью безопасно, личные данные не собираются",
   "btn_grant_permission": "Предоставить разрешение",
-  
   "itemsetting_language_title": "Язык",
   "itemsetting_language_subtitle": "Изменить язык приложения",
   "language_dialog_title": "Выберите язык",
-  "language_dialog_subtitle": "Применяется сразу, перезапуск не нужен"
+  "language_dialog_subtitle": "Применяется сразу, перезапуск не нужен",
+  "act_dialog_title": "Активация SenseiX",
+  "act_dialog_subtitle": "Выберите способ активации",
+  "act_shizuku_desc": "Используйте запущенный Shizuku. Быстро, без сопряжения.",
+  "act_wireless_desc": "Без Shizuku, через отладку по Wi-Fi.",
+  "act_status_shizuku_on": "Shizuku запущен",
+  "act_status_shizuku_perm": "Нужно разрешение Shizuku",
+  "act_status_shizuku_off": "Shizuku не запущен",
+  "act_status_unsupported": "Не поддерживается (нужен Android 11+)",
+  "act_status_paired": "Уже сопряжено",
+  "act_status_need_pair": "Нужно сопряжение (один раз)",
+  "act_cancel": "Отмена",
+  "act_wireless_hint": "Откройте «Отладка по Wi-Fi» > «Подключить с кодом» и введите код в уведомлении.",
+  "act_wireless_ok": "Режим Wireless активирован"
 }

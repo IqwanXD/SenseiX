@@ -48,7 +48,6 @@
   "text_temp": "温度を監視",
   "text_fps": "FPS を監視",
   "text_time": "時刻を監視",
-
   "page_home_title": "ホーム",
   "page_home_subtitle": "ダッシュボードメニュー",
   "page_apps_title": "アプリ",
@@ -76,7 +75,6 @@
   "shizuku_denied_title": "サービスが見つかりません",
   "shizuku_denied_subtitle": "SenseiX はオフラインです",
   "shizuku_denied_message": "SenseiX サービスがオンラインか確認してください。",
-
   "about_title": "IqwanoINO",
   "about_subtitle": "開発者 | メンテナー",
   "about_quote": "「創造性がすべて」",
@@ -84,7 +82,6 @@
   "about_btn_telegram": "Telegram",
   "about_btn_donation": "サポート / 寄付",
   "about_avatar_desc": "開発者のアバター",
-
   "colorpicker_title": "テーマカラーのカスタマイズ",
   "colorpicker_subtitle": "お好みのテーマカラーを選択してください",
   "colorpicker_hex_hint": "例: #FFFFFF",
@@ -95,14 +92,25 @@
   "colorpicker_reset_message": "アプリのテーマをデフォルトにリセットしますか？この処理にはアプリの終了が必要です。",
   "dialog_confirm_action": "操作の確認",
   "btn_proceed": "続行",
-
   "overlay_title": "権限が必要です",
   "overlay_subtitle": "他のアプリの上に重ねて表示",
   "overlay_message": "SenseiX がバックグラウンドでパフォーマンス最適化とリアルタイムオーバーレイをスムーズに動作させるには、「他のアプリの上に重ねて表示」の権限が必要です。\n\n• リアルタイムのパフォーマンス情報を表示します\n• システムによる最適化プロセスの強制終了を防ぎます\n• 完全に安全で、個人データは収集されません",
   "btn_grant_permission": "権限を許可",
-  
   "itemsetting_language_title": "言語",
   "itemsetting_language_subtitle": "アプリの言語を変更",
   "language_dialog_title": "言語を選択",
-  "language_dialog_subtitle": "すぐに適用されます（再起動不要）"
+  "language_dialog_subtitle": "すぐに適用されます（再起動不要）",
+  "act_dialog_title": "SenseiX を有効化",
+  "act_dialog_subtitle": "有効化の方法を選択",
+  "act_shizuku_desc": "起動中の Shizuku を使用。高速でペアリング不要。",
+  "act_wireless_desc": "Shizuku 不要。Wi-Fi のワイヤレスデバッグを使用。",
+  "act_status_shizuku_on": "Shizuku 実行中",
+  "act_status_shizuku_perm": "Shizuku の権限が必要",
+  "act_status_shizuku_off": "Shizuku は未実行",
+  "act_status_unsupported": "非対応（Android 11 以上が必要）",
+  "act_status_paired": "ペアリング済み",
+  "act_status_need_pair": "初回のみペアリングが必要",
+  "act_cancel": "キャンセル",
+  "act_wireless_hint": "ワイヤレスデバッグ > ペア設定コードでペア設定し、通知にコードを入力してください。",
+  "act_wireless_ok": "ワイヤレスモードが有効になりました"
 }

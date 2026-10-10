@@ -48,7 +48,6 @@
   "text_temp": "Monitor Temperature",
   "text_fps": "Monitor FPS",
   "text_time": "Monitor Time",
-
   "page_home_title": "Home",
   "page_home_subtitle": "Dashboard menu",
   "page_apps_title": "Apps",
@@ -76,7 +75,6 @@
   "shizuku_denied_title": "Service not Found",
   "shizuku_denied_subtitle": "SenseiX is Offline",
   "shizuku_denied_message": "Please make sure SenseiX Service is Online.",
-
   "about_title": "IqwanoINO",
   "about_subtitle": "Developer | Maintainer",
   "about_quote": "“Creativity Is Everything”",
@@ -84,7 +82,6 @@
   "about_btn_telegram": "Telegram",
   "about_btn_donation": "Support / Donation",
   "about_avatar_desc": "Developer avatar",
-
   "colorpicker_title": "Theme Color Customization",
   "colorpicker_subtitle": "Choose a theme color that suits your preference",
   "colorpicker_hex_hint": "Example: #FFFFFF",
@@ -95,14 +92,25 @@
   "colorpicker_reset_message": "Are you sure you want to reset the app theme to default? This process requires you to exit the application.",
   "dialog_confirm_action": "Confirm Action",
   "btn_proceed": "Proceed",
-
   "overlay_title": "Permission Required",
   "overlay_subtitle": "Display Over Other Apps",
   "overlay_message": "SenseiX requires the 'Display over other apps' permission to allow performance optimization and real-time overlays to function smoothly in the background.\n\n• Displays real-time performance stats\n• Prevents the optimization process from being terminated by the system\n• Completely safe and does not collect any personal data",
   "btn_grant_permission": "Grant Permission",
-  
   "itemsetting_language_title": "Language",
   "itemsetting_language_subtitle": "Change the app language",
   "language_dialog_title": "Choose Language",
-  "language_dialog_subtitle": "Applied instantly, no restart needed"
+  "language_dialog_subtitle": "Applied instantly, no restart needed",
+  "act_dialog_title": "Activate SenseiX",
+  "act_dialog_subtitle": "Choose an activation method",
+  "act_shizuku_desc": "Use a running Shizuku. Fast, no pairing needed.",
+  "act_wireless_desc": "No Shizuku needed. Uses Wireless debugging over Wi-Fi.",
+  "act_status_shizuku_on": "Shizuku is running",
+  "act_status_shizuku_perm": "Shizuku permission needed",
+  "act_status_shizuku_off": "Shizuku is not running",
+  "act_status_unsupported": "Not supported (needs Android 11+)",
+  "act_status_paired": "Already paired",
+  "act_status_need_pair": "One-time pairing required",
+  "act_cancel": "Cancel",
+  "act_wireless_hint": "Open Wireless debugging > Pair device with pairing code, then type the code in the notification.",
+  "act_wireless_ok": "Wireless mode activated"
 }

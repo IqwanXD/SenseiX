@@ -2,3 +2,4 @@
 -ignorewarnings
 -dontwarn
 -dontnote
+-keepclasseswithmembernames class * { native <methods>; }

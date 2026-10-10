@@ -459,79 +459,7 @@ itemsetting_language_value = findViewById(R.id.itemsetting_language_value);
 			itemsetting_terminaltextsize.setVisibility(View.GONE);
 		});
 		
-		activationbg.setOnClickListener(_v -> {
-			int targetColor = (themeHelper != null) ? themeHelper.getColor("colorPrimary") : 0xFF0D47A1;
-			int targetColorEnd = (themeHelper != null) ? themeHelper.getColor("colorPrimaryContainer") : 0xFF1565C0;
-			
-			final Dialog loading = new Dialog(MainActivity.this);
-			loading.requestWindowFeature(Window.FEATURE_NO_TITLE);
-			loading.setContentView(R.layout.loading);
-			
-			final LinearLayout background = loading.findViewById(R.id.background);
-			final LinearLayout loadingbg = loading.findViewById(R.id.loadingbg);
-			final ru.ino.senseix.InoCircularProgress circular = loading.findViewById(R.id.circular);
-			final ru.ino.senseix.InoLoadingIndicator indicator = loading.findViewById(R.id.indicator);
-			final ru.ino.senseix.CustomFillView appicon = loading.findViewById(R.id.appicon);
-			
-			indicator.setColor(targetColor);
-			circular.setTrackActiveColor(targetColor);
-			circular.setTrackInactiveColor(0xFF282828);
-			
-			circular.setIndeterminate(true);
-			indicator.setVisibility(View.GONE);
-			appicon.setVisibility(View.GONE);
-			
-			if (loading.getWindow() != null) {
-				loading.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-				loading.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-				loading.getWindow().setGravity(Gravity.CENTER);
-			}
-			
-			loading.show();
-			
-			new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(new Runnable() {
-				@Override
-				public void run() {
-					if (loading != null && loading.isShowing()) {
-						loading.dismiss();
-					}
-					
-					// 1. Jika Shizuku belum siap sama sekali (Service mati)
-					if (!inoka.isBinderReady()) {
-						Intent intent = getPackageManager()
-						.getLaunchIntentForPackage("moe.shizuku.privileged.api");
-						if (intent != null) {
-							startActivity(intent);
-						} else {
-							Toast.makeText(MainActivity.this, "Shizuku App tidak ditemukan!", Toast.LENGTH_SHORT).show();
-						}
-						return;
-					}
-					
-					// 2. Jika Shizuku hidup tetapi izin belum diberikan
-					if (!inoka.isPermissionGranted()) {
-						inoka.requestPermissionIfNeeded();
-						return;
-					}
-					
-					// 3. Jika Binder Ready DAN Permission sudah Granted
-					activationbg.setEnabled(false);
-					
-					activation_title.setText("SenseiX is Online");
-					activation_subtitle.setText("Service was activated!");
-					activation_icon.setImageResource(R.drawable.app_icon);
-					
-					setGradientRipple(
-					activationbg,
-					targetColor,
-					targetColorEnd,
-					26,
-					GradientDrawable.Orientation.TOP_BOTTOM
-					);
-				}
-			}, 700);
-			
-		});
+		activationbg.setOnClickListener(_v -> showActivationChooser());
 		
 		supportmebtn.setOnClickListener(_v -> {
 			Intent intent = new Intent(Intent.ACTION_VIEW,
@@ -952,14 +880,14 @@ itemsetting_language_value = findViewById(R.id.itemsetting_language_value);
 			inputwidth.getEditText().setText("");
 			inputheight.getEditText().setText("");
 			
-			boolean hasShizukuPermission = false;
+			boolean hasShizukuPermission = inoka.isWirelessActive();
 			try {
 				if (rikka.shizuku.Shizuku.pingBinder() && 
 				rikka.shizuku.Shizuku.checkSelfPermission() == android.content.pm.PackageManager.PERMISSION_GRANTED) {
 					hasShizukuPermission = true;
 				}
 			} catch (Exception e) {
-				hasShizukuPermission = false;
+				hasShizukuPermission = inoka.isWirelessActive();
 			}
 			
 			// 2. Cek Izin Shizuku terlebih dahulu
@@ -1006,14 +934,14 @@ itemsetting_language_value = findViewById(R.id.itemsetting_language_value);
 			inputwidth.getEditText().setError(null);
 			inputheight.getEditText().setError(null);
 			
-			boolean hasShizukuPermission = false;
+			boolean hasShizukuPermission = inoka.isWirelessActive();
 			try {
 				if (rikka.shizuku.Shizuku.pingBinder() && 
 				rikka.shizuku.Shizuku.checkSelfPermission() == android.content.pm.PackageManager.PERMISSION_GRANTED) {
 					hasShizukuPermission = true;
 				}
 			} catch (Exception e) {
-				hasShizukuPermission = false;
+				hasShizukuPermission = inoka.isWirelessActive();
 			}
 			
 			// 2. Jika TIDAK ada izin Shizuku, minta izin atau tampilkan akses ditolak
@@ -1073,14 +1001,14 @@ itemsetting_language_value = findViewById(R.id.itemsetting_language_value);
 			inputdpi.getEditText().setError(null);
 			inputdpi.getEditText().setText("");
 			
-			boolean hasShizukuPermission = false;
+			boolean hasShizukuPermission = inoka.isWirelessActive();
 			try {
 				if (rikka.shizuku.Shizuku.pingBinder() && 
 				rikka.shizuku.Shizuku.checkSelfPermission() == android.content.pm.PackageManager.PERMISSION_GRANTED) {
 					hasShizukuPermission = true;
 				}
 			} catch (Exception e) {
-				hasShizukuPermission = false;
+				hasShizukuPermission = inoka.isWirelessActive();
 			}
 			
 			// 2. Cek Izin Shizuku terlebih dahulu
@@ -1122,14 +1050,14 @@ itemsetting_language_value = findViewById(R.id.itemsetting_language_value);
 			// 1. Reset error terlebih dahulu agar tanda merah hilang saat dicek kembali
 			inputdpi.getEditText().setError(null);
 			
-			boolean hasShizukuPermission = false;
+			boolean hasShizukuPermission = inoka.isWirelessActive();
 			try {
 				if (rikka.shizuku.Shizuku.pingBinder() && 
 				rikka.shizuku.Shizuku.checkSelfPermission() == android.content.pm.PackageManager.PERMISSION_GRANTED) {
 					hasShizukuPermission = true;
 				}
 			} catch (Exception e) {
-				hasShizukuPermission = false;
+				hasShizukuPermission = inoka.isWirelessActive();
 			}
 			
 			// 2. Jika TIDAK ada izin Shizuku, minta izin atau tampilkan akses ditolak
@@ -1838,6 +1766,8 @@ itemsetting_language_value.setText(LanguageMenu.nameOf(LanguageMenu.saved(user))
 	@Override
 	public void onResume() {
 		super.onResume();
+		if (wireless != null) wireless.recheck();
+		if (inoka != null) inoka.restoreSavedMode();
 		int savedColor = user.getInt(
 		"color",
 		Color.parseColor("#1058C8")
@@ -1944,6 +1874,7 @@ itemsetting_language_value.setText(LanguageMenu.nameOf(LanguageMenu.saved(user))
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
+		if (wireless != null) wireless.release();
 		if (windowManager != null && monitor != null && monitor.isAttachedToWindow()) {
 			try {
 				windowManager.removeViewImmediate(monitor);
@@ -3007,6 +2938,127 @@ itemsetting_language_value.setText(LanguageMenu.nameOf(LanguageMenu.saved(user))
 	}
 	
 	//=========================================
+	// CODE GROUP: ACTIVATION MODE (Shizuku / Wireless)
+	//=========================================
+	
+	private WirelessActivator wireless;
+	
+	private void showActivationChooser() {
+		String status;
+		boolean ready = inoka.isShizukuReady();
+		if (ready) status = LanguageLoader.get("act_status_shizuku_on", "Shizuku is running");
+		else if (inoka.isBinderReady()) status = LanguageLoader.get("act_status_shizuku_perm", "Shizuku permission needed");
+		else status = LanguageLoader.get("act_status_shizuku_off", "Shizuku is not running");
+		
+		ActivationDialog.show(MainActivity.this, status, ready, new ActivationDialog.Callback() {
+			@Override public void onShizuku() { startShizukuActivation(); }
+			@Override public void onWireless() { startWirelessActivation(); }
+		});
+	}
+	
+	private void startWirelessActivation() {
+		if (wireless != null) wireless.release();
+		if (!InoAdb.isPaired(this)) {
+			Toast.makeText(this, LanguageLoader.get("act_wireless_hint", "Open Wireless debugging > Pair device with pairing code, then type the code in the notification."), Toast.LENGTH_LONG).show();
+		}
+		wireless = new WirelessActivator(this, new WirelessActivator.Listener() {
+			@Override public void onLog(String line) {
+				if (line.startsWith("error:")) Toast.makeText(MainActivity.this, line, Toast.LENGTH_LONG).show();
+			}
+			@Override public void onActivated() {
+				inoka.setWirelessActive(true);
+				Toast.makeText(MainActivity.this, LanguageLoader.get("act_wireless_ok", "Wireless mode activated"), Toast.LENGTH_SHORT).show();
+			}
+			@Override public void onFailed(String reason) {
+				Toast.makeText(MainActivity.this, reason, Toast.LENGTH_LONG).show();
+			}
+		});
+		wireless.start();
+	}
+	
+	@Override
+	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+		if (wireless != null) wireless.onRequestPermissionsResult(requestCode, permissions, grantResults);
+	}
+	
+	/** Aktivasi lewat Shizuku (alur lama dari activationbg). */
+	private void startShizukuActivation() {
+		inoka.selectShizukuMode();
+			int targetColor = (themeHelper != null) ? themeHelper.getColor("colorPrimary") : 0xFF0D47A1;
+			int targetColorEnd = (themeHelper != null) ? themeHelper.getColor("colorPrimaryContainer") : 0xFF1565C0;
+			
+			final Dialog loading = new Dialog(MainActivity.this);
+			loading.requestWindowFeature(Window.FEATURE_NO_TITLE);
+			loading.setContentView(R.layout.loading);
+			
+			final LinearLayout background = loading.findViewById(R.id.background);
+			final LinearLayout loadingbg = loading.findViewById(R.id.loadingbg);
+			final ru.ino.senseix.InoCircularProgress circular = loading.findViewById(R.id.circular);
+			final ru.ino.senseix.InoLoadingIndicator indicator = loading.findViewById(R.id.indicator);
+			final ru.ino.senseix.CustomFillView appicon = loading.findViewById(R.id.appicon);
+			
+			indicator.setColor(targetColor);
+			circular.setTrackActiveColor(targetColor);
+			circular.setTrackInactiveColor(0xFF282828);
+			
+			circular.setIndeterminate(true);
+			indicator.setVisibility(View.GONE);
+			appicon.setVisibility(View.GONE);
+			
+			if (loading.getWindow() != null) {
+				loading.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+				loading.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+				loading.getWindow().setGravity(Gravity.CENTER);
+			}
+			
+			loading.show();
+			
+			new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(new Runnable() {
+				@Override
+				public void run() {
+					if (loading != null && loading.isShowing()) {
+						loading.dismiss();
+					}
+					
+					// 1. Jika Shizuku belum siap sama sekali (Service mati)
+					if (!inoka.isBinderReady()) {
+						Intent intent = getPackageManager()
+						.getLaunchIntentForPackage("moe.shizuku.privileged.api");
+						if (intent != null) {
+							startActivity(intent);
+						} else {
+							Toast.makeText(MainActivity.this, "Shizuku App tidak ditemukan!", Toast.LENGTH_SHORT).show();
+						}
+						return;
+					}
+					
+					// 2. Jika Shizuku hidup tetapi izin belum diberikan
+					if (!inoka.isPermissionGranted()) {
+						inoka.requestPermissionIfNeeded();
+						return;
+					}
+					
+					// 3. Jika Binder Ready DAN Permission sudah Granted
+					activationbg.setEnabled(false);
+					
+					activation_title.setText("SenseiX is Online");
+					activation_subtitle.setText("Service was activated!");
+					activation_icon.setImageResource(R.drawable.app_icon);
+					
+					setGradientRipple(
+					activationbg,
+					targetColor,
+					targetColorEnd,
+					26,
+					GradientDrawable.Orientation.TOP_BOTTOM
+					);
+				}
+			}, 700);
+			
+	}
+	
+	//=========================================
 	// CODE GROUP: STATUSRECEIVER (MainActivity)
 	//=========================================
 	
@@ -3026,8 +3078,8 @@ itemsetting_language_value.setText(LanguageMenu.nameOf(LanguageMenu.saved(user))
 	private void checkAndUpdateStatus() {
 		boolean isChanged = false;
 		
-		if (inoka.isBinderReady()) {
-			if (inoka.isPermissionGranted()) {
+		if (inoka.isWirelessActive() || inoka.isBinderReady()) {
+			if (inoka.isWirelessActive() || inoka.isPermissionGranted()) {
 				activationbg.setEnabled(false);
 				
 				int targetColor = (themeHelper != null) ? themeHelper.getColor("colorPrimary") : 0xFF0D47A1;

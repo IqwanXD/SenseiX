@@ -48,7 +48,6 @@
   "text_temp": "监控温度",
   "text_fps": "监控 FPS",
   "text_time": "监控时间",
-
   "page_home_title": "首页",
   "page_home_subtitle": "仪表盘菜单",
   "page_apps_title": "应用",
@@ -76,7 +75,6 @@
   "shizuku_denied_title": "未找到服务",
   "shizuku_denied_subtitle": "SenseiX 离线",
   "shizuku_denied_message": "请确保 SenseiX 服务处于在线状态。",
-
   "about_title": "IqwanoINO",
   "about_subtitle": "开发者 | 维护者",
   "about_quote": "“创造力就是一切”",
@@ -84,7 +82,6 @@
   "about_btn_telegram": "Telegram",
   "about_btn_donation": "支持 / 捐赠",
   "about_avatar_desc": "开发者头像",
-
   "colorpicker_title": "主题颜色自定义",
   "colorpicker_subtitle": "选择适合您喜好的主题颜色",
   "colorpicker_hex_hint": "示例：#FFFFFF",
@@ -95,14 +92,25 @@
   "colorpicker_reset_message": "确定要将应用主题重置为默认吗？此过程需要退出应用。",
   "dialog_confirm_action": "确认操作",
   "btn_proceed": "继续",
-
   "overlay_title": "需要权限",
   "overlay_subtitle": "显示在其他应用上层",
   "overlay_message": "SenseiX 需要“显示在其他应用上层”权限，才能让性能优化和实时悬浮窗在后台流畅运行。\n\n• 显示实时性能数据\n• 防止优化进程被系统终止\n• 完全安全，不会收集任何个人数据",
   "btn_grant_permission": "授予权限",
-  
   "itemsetting_language_title": "语言",
   "itemsetting_language_subtitle": "更改应用语言",
   "language_dialog_title": "选择语言",
-  "language_dialog_subtitle": "立即生效，无需重启"
+  "language_dialog_subtitle": "立即生效，无需重启",
+  "act_dialog_title": "激活 SenseiX",
+  "act_dialog_subtitle": "选择激活方式",
+  "act_shizuku_desc": "使用已运行的 Shizuku，快速且无需配对。",
+  "act_wireless_desc": "无需 Shizuku，通过 Wi-Fi 无线调试。",
+  "act_status_shizuku_on": "Shizuku 运行中",
+  "act_status_shizuku_perm": "需要 Shizuku 授权",
+  "act_status_shizuku_off": "Shizuku 未运行",
+  "act_status_unsupported": "不支持（需要 Android 11+）",
+  "act_status_paired": "已配对",
+  "act_status_need_pair": "需要配对一次",
+  "act_cancel": "取消",
+  "act_wireless_hint": "打开无线调试 > 使用配对码配对设备，然后在通知中输入配对码。",
+  "act_wireless_ok": "无线模式已激活"
 }
