@@ -2,6 +2,9 @@ package ru.ino.senseix;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -40,6 +43,8 @@ public final class WirelessActivator {
     private final ExecutorService io = Executors.newSingleThreadExecutor();
     private final InoService.Listener svc;
     private volatile boolean waiting;
+    /** True selagi pengguna di layar pengaturan notifikasi; recheck() melanjutkan pairing begitu diizinkan. */
+    private boolean awaitingNotifSettings;
 
     public WirelessActivator(Activity activity, Listener listener) {
         this.act = activity;
@@ -97,6 +102,12 @@ public final class WirelessActivator {
     /** Panggil dari onResume: pairing lewat notifikasi bisa selesai saat aplikasi di latar. */
     public void recheck() {
         if (!waiting) return;
+        // Kembali dari pengaturan notifikasi: kalau sudah diizinkan, lanjut ke Opsi pengembang.
+        if (awaitingNotifSettings && notificationsAllowed()) {
+            awaitingNotifSettings = false;
+            beginPairing();
+            return;
+        }
         io.execute(new Runnable() {
             @Override public void run() {
                 final boolean ok = InoService.isAuthorized(act, 3000);
@@ -109,22 +120,24 @@ public final class WirelessActivator {
 
     public void cancel() {
         waiting = false;
+        awaitingNotifSettings = false;
         InoService.stop(act);
     }
 
     public void release() {
         waiting = false;
+        awaitingNotifSettings = false;
         InoService.setListener(null);
         io.shutdown();
     }
 
     public void onRequestPermissionsResult(int req, String[] perms, int[] results) {
         if (req != REQ_NOTIF) return;
-        if (results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED) {
+        if (results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED && notificationsAllowed()) {
             beginPairing();
         } else {
-            waiting = false;
-            cb.onFailed(LanguageLoader.get("act_notif_permission", "Notification permission is required to enter the pairing code"));
+            // Ditolak / tidak ada dialog: arahkan ke pengaturan notifikasi app, jangan langsung gagal.
+            openNotificationSettings();
         }
     }
 
@@ -144,13 +157,62 @@ public final class WirelessActivator {
         }
     }
 
+    /**
+     * Notifikasi benar-benar bisa tampil? Berlaku di semua targetSdk (app ini targetSdk 28, jadi
+     * dialog requestPermissions(POST_NOTIFICATIONS) di Android 13+ tidak muncul), dan ikut
+     * memeriksa channel pairing yang dimatikan.
+     */
+    private boolean notificationsAllowed() {
+        try {
+            if (Build.VERSION.SDK_INT < 24) return true;
+            NotificationManager nm = (NotificationManager) act.getSystemService(Context.NOTIFICATION_SERVICE);
+            if (nm == null) return true;
+            if (!nm.areNotificationsEnabled()) return false;
+            if (Build.VERSION.SDK_INT >= 26) {
+                NotificationChannel ch = nm.getNotificationChannel("ino_adb"); // CHANNEL di InoService
+                if (ch != null && ch.getImportance() == NotificationManager.IMPORTANCE_NONE) return false;
+            }
+            return true;
+        } catch (Throwable t) {
+            return true;
+        }
+    }
+
     private void requestNotifThenPair() {
+        // Dialog izin hanya ada kalau app menargetkan SDK 33+. Selain itu langsung cek status notifikasi.
         if (Build.VERSION.SDK_INT >= 33
+                && act.getApplicationInfo().targetSdkVersion >= 33
                 && act.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             act.requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQ_NOTIF);
             return;
         }
+        if (!notificationsAllowed()) {
+            openNotificationSettings();
+            return;
+        }
         beginPairing();
+    }
+
+    /** Buka pengaturan notifikasi SenseiX. Pairing dilanjutkan otomatis dari recheck() setelah diizinkan. */
+    private void openNotificationSettings() {
+        awaitingNotifSettings = true;
+        cb.onLog("hint: " + LanguageLoader.get("act_notif_settings_hint",
+                "Allow notifications for SenseiX, then come back to the app to continue pairing."));
+        try {
+            Intent i = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
+            i.putExtra(Settings.EXTRA_APP_PACKAGE, act.getPackageName());
+            act.startActivity(i);
+            return;
+        } catch (RuntimeException ignored) {}
+        try {
+            Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            i.setData(android.net.Uri.parse("package:" + act.getPackageName()));
+            act.startActivity(i);
+        } catch (RuntimeException e) {
+            awaitingNotifSettings = false;
+            waiting = false;
+            cb.onFailed(LanguageLoader.get("act_notif_permission", "Notification permission is required to enter the pairing code"));
+        }
     }
 
     private void beginPairing() {

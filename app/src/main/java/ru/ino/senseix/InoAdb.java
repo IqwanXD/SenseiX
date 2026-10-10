@@ -2,12 +2,16 @@ package ru.ino.senseix;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Environment;
 import android.util.Base64;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -96,14 +100,125 @@ public final class InoAdb {
     public static int savedPort(Context c) { return prefs(c).getInt("port", 0); }
     public static void saveTcpPort(Context c, int port) { prefs(c).edit().putInt("tcp_port", port).apply(); }
     public static int savedTcpPort(Context c) { return prefs(c).getInt("tcp_port", 5555); }
-    public static boolean isPaired(Context c) { return prefs(c).getBoolean("paired", false); }
-    static void markPaired(Context c) { prefs(c).edit().putBoolean("paired", true).apply(); }
 
-    /** Hapus kunci lokal. Kunci publik lama tetap ada di Opsi Pengembang > Wireless debugging > perangkat terpasang. */
+    /**
+     * True kalau kunci pairing ada (di prefs, atau berhasil dipulihkan dari cadangan setelah
+     * app dihapus/diinstal ulang). Kunci yang SAMA dipakai lagi, jadi Android tidak menambah
+     * entri "perangkat terpasang" baru: cukup aktifkan, tanpa pairing ulang.
+     */
+    public static boolean isPaired(Context c) {
+        restoreFromBackup(c);
+        SharedPreferences sp = prefs(c);
+        boolean ok = sp.getBoolean("paired", false) && sp.getString("key_priv", null) != null;
+        if (ok && !backupFile().exists()) backup(c); // izin storage baru diberikan: cadangkan sekarang
+        return ok;
+    }
+
+    static void markPaired(Context c) {
+        prefs(c).edit().putBoolean("paired", true).commit();
+        backup(c);
+    }
+
+    /**
+     * Hapus kunci lokal DAN cadangannya. Kunci publik lama tetap ada di Opsi Pengembang >
+     * Wireless debugging > perangkat terpasang (hapus manual lewat "Lupakan"). Pairing berikutnya
+     * membuat kunci baru, jadi entri baru; jangan dipanggil di alur pairing ulang biasa.
+     */
     public static synchronized void forgetPairing(Context c) {
         AdbKey.sCache = null;
-        prefs(c).edit().remove("key_priv").remove("key_pub").remove("key_cert")
-                .remove("paired").remove("host").remove("port").apply();
+        prefs(c).edit().remove("key_priv").remove("key_pub").remove("key_cert").remove("key_name")
+                .remove("paired").remove("host").remove("port").commit();
+        try { backupFile().delete(); } catch (Throwable ignored) {}
+    }
+
+    // ------------------------------------------------------------------ cadangan kunci (tahan uninstall)
+
+    /**
+     * Lokasi cadangan: /sdcard/.SenseiX/adb_key.txt (folder yang sama dengan modul SenseiX).
+     * Tidak ikut terhapus saat app di-uninstall. Dibaca ulang setelah install ulang selama
+     * izin "akses semua file" aktif (inosh-setup-storage). Tanpa izin itu, cadangan dilewati diam-diam.
+     */
+    private static File backupFile() {
+        return new File(Environment.getExternalStorageDirectory(), ".SenseiX/adb_key.txt");
+    }
+
+    private static synchronized void backup(Context c) {
+        try {
+            SharedPreferences sp = prefs(c);
+            String p = sp.getString("key_priv", null);
+            String u = sp.getString("key_pub", null);
+            String ce = sp.getString("key_cert", null);
+            if (p == null || u == null || ce == null) return;
+            File f = backupFile();
+            File dir = f.getParentFile();
+            if (dir != null && !dir.exists() && !dir.mkdirs()) return;
+            String body = "key_priv=" + p + "\n"
+                    + "key_pub=" + u + "\n"
+                    + "key_cert=" + ce + "\n"
+                    + "key_name=" + sp.getString("key_name", sDeviceName) + "\n"
+                    + "paired=" + (sp.getBoolean("paired", false) ? "1" : "0") + "\n";
+            File tmp = new File(dir, "adb_key.tmp");
+            FileOutputStream fos = new FileOutputStream(tmp);
+            try {
+                fos.write(body.getBytes(StandardCharsets.UTF_8));
+                fos.flush();
+            } finally {
+                fos.close();
+            }
+            if (!tmp.renameTo(f)) tmp.delete();
+        } catch (Throwable ignored) {
+            // tanpa izin storage: tidak apa-apa, dicoba lagi saat isPaired() berikutnya
+        }
+    }
+
+    /** Isi prefs dari cadangan kalau prefs belum punya kunci. True kalau ada yang dipulihkan. */
+    private static synchronized boolean restoreFromBackup(Context c) {
+        try {
+            SharedPreferences sp = prefs(c);
+            if (sp.getString("key_priv", null) != null && sp.getString("key_pub", null) != null
+                    && sp.getString("key_cert", null) != null) return false;
+            File f = backupFile();
+            if (!f.isFile() || !f.canRead() || f.length() > 64 * 1024) return false;
+
+            ByteArrayOutputStream bo = new ByteArrayOutputStream();
+            FileInputStream in = new FileInputStream(f);
+            try {
+                byte[] buf = new byte[4096];
+                int k;
+                while ((k = in.read(buf)) > 0) bo.write(buf, 0, k);
+            } finally {
+                in.close();
+            }
+
+            String p = null, u = null, ce = null, name = null;
+            boolean paired = false;
+            for (String line : new String(bo.toByteArray(), StandardCharsets.UTF_8).split("\n")) {
+                int eq = line.indexOf('=');
+                if (eq <= 0) continue;
+                String k = line.substring(0, eq).trim();
+                String v = line.substring(eq + 1).trim();
+                if (k.equals("key_priv")) p = v;
+                else if (k.equals("key_pub")) u = v;
+                else if (k.equals("key_cert")) ce = v;
+                else if (k.equals("key_name")) name = v;
+                else if (k.equals("paired")) paired = v.equals("1");
+            }
+            if (p == null || u == null || ce == null || p.length() == 0 || u.length() == 0 || ce.length() == 0) return false;
+
+            // validasi: cadangan rusak tidak boleh menimpa apa pun
+            KeyFactory kf = KeyFactory.getInstance("RSA");
+            kf.generatePrivate(new PKCS8EncodedKeySpec(Base64.decode(p, Base64.NO_WRAP)));
+            kf.generatePublic(new X509EncodedKeySpec(Base64.decode(u, Base64.NO_WRAP)));
+            CertificateFactory.getInstance("X.509").generateCertificate(new ByteArrayInputStream(Base64.decode(ce, Base64.NO_WRAP)));
+
+            sp.edit().putString("key_priv", p).putString("key_pub", u).putString("key_cert", ce)
+                    .putString("key_name", name != null && name.length() > 0 ? name : sDeviceName)
+                    .putBoolean("paired", paired).commit();
+            AdbKey.sCache = null;
+            return true;
+        } catch (Throwable t) {
+            return false;
+        }
     }
 
     /**
@@ -146,12 +261,15 @@ public final class InoAdb {
         final PrivateKey priv;
         final RSAPublicKey pub;
         final X509Certificate cert;
-        private static AdbKey sCache;
+        /** Nama yang tertulis di kunci publik. Dikunci saat kunci dibuat: nama berubah = entri baru di Android. */
+        final String name;
+        static AdbKey sCache;
 
-        private AdbKey(PrivateKey p, RSAPublicKey u, X509Certificate c) { priv = p; pub = u; cert = c; }
+        private AdbKey(PrivateKey p, RSAPublicKey u, X509Certificate c, String n) { priv = p; pub = u; cert = c; name = n; }
 
         static synchronized AdbKey get(Context ctx) throws Exception {
             if (sCache != null) return sCache;
+            restoreFromBackup(ctx); // app baru diinstal ulang: pakai kunci lama, bukan buat baru
             SharedPreferences sp = prefs(ctx);
             String p = sp.getString("key_priv", null);
             String u = sp.getString("key_pub", null);
@@ -159,24 +277,35 @@ public final class InoAdb {
             KeyFactory kf = KeyFactory.getInstance("RSA");
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
             if (p != null && u != null && c != null) {
+                String n = sp.getString("key_name", null);
+                if (n == null || n.length() == 0) {
+                    n = sDeviceName;
+                    sp.edit().putString("key_name", n).commit();
+                }
                 sCache = new AdbKey(
                         kf.generatePrivate(new PKCS8EncodedKeySpec(Base64.decode(p, Base64.NO_WRAP))),
                         (RSAPublicKey) kf.generatePublic(new X509EncodedKeySpec(Base64.decode(u, Base64.NO_WRAP))),
-                        (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(Base64.decode(c, Base64.NO_WRAP))));
+                        (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(Base64.decode(c, Base64.NO_WRAP))),
+                        n);
+                if (!backupFile().exists()) backup(ctx);
                 return sCache;
             }
             KeyPairGenerator g = KeyPairGenerator.getInstance("RSA");
             g.initialize(2048);
             KeyPair kp = g.generateKeyPair();
             RSAPublicKey pub = (RSAPublicKey) kp.getPublic();
-            byte[] der = makeCert(kp.getPrivate(), pub, sDeviceName);
+            String n = sDeviceName;
+            byte[] der = makeCert(kp.getPrivate(), pub, n);
             X509Certificate cert = (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(der));
+            // commit(), bukan apply(): kunci harus benar-benar tersimpan sebelum dipakai pairing
             sp.edit()
                     .putString("key_priv", Base64.encodeToString(kp.getPrivate().getEncoded(), Base64.NO_WRAP))
                     .putString("key_pub", Base64.encodeToString(pub.getEncoded(), Base64.NO_WRAP))
                     .putString("key_cert", Base64.encodeToString(der, Base64.NO_WRAP))
-                    .apply();
-            sCache = new AdbKey(kp.getPrivate(), pub, cert);
+                    .putString("key_name", n)
+                    .commit();
+            sCache = new AdbKey(kp.getPrivate(), pub, cert, n);
+            backup(ctx);
             return sCache;
         }
 
@@ -188,7 +317,7 @@ public final class InoAdb {
             BigInteger rr = BigInteger.ONE.shiftLeft(4096).mod(n);
             ByteBuffer bb = ByteBuffer.allocate(4 + 4 + 256 + 256 + 4).order(ByteOrder.LITTLE_ENDIAN);
             bb.putInt(64).putInt(n0inv).put(le(n, 256)).put(le(rr, 256)).putInt(pub.getPublicExponent().intValue());
-            String s = Base64.encodeToString(bb.array(), Base64.NO_WRAP) + " " + sDeviceName + "\0";
+            String s = Base64.encodeToString(bb.array(), Base64.NO_WRAP) + " " + name + "\0";
             return s.getBytes(StandardCharsets.UTF_8);
         }
 

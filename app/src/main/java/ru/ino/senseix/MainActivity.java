@@ -255,8 +255,8 @@ public class MainActivity extends Activity {
 	private SharedPreferences user;
     
     private LinearLayout itemsetting_language;
-private ImageView itemsetting_language_icon;
-private TextView itemsetting_language_value;
+    private ImageView itemsetting_language_icon;
+    private TextView itemsetting_language_value;
 	
 	@Override
 	protected void onCreate(Bundle _savedInstanceState) {
@@ -349,8 +349,8 @@ private TextView itemsetting_language_value;
 		itemsetting_terminaltextsize = findViewById(R.id.itemsetting_terminaltextsize);
 		itemsetting_appearances = findViewById(R.id.itemsetting_appearances);
 		itemsetting_language = findViewById(R.id.itemsetting_language);
-itemsetting_language_icon = findViewById(R.id.itemsetting_language_icon);
-itemsetting_language_value = findViewById(R.id.itemsetting_language_value);
+        itemsetting_language_icon = findViewById(R.id.itemsetting_language_icon);
+        itemsetting_language_value = findViewById(R.id.itemsetting_language_value);
         customdns_feature = findViewById(R.id.customdns_feature);
 		customreso_feature = findViewById(R.id.customreso_feature);
 		customdpi_feature = findViewById(R.id.customdpi_feature);
@@ -472,7 +472,7 @@ itemsetting_language_value = findViewById(R.id.itemsetting_language_value);
 		
 		mecommunitybtn.setOnClickListener(_v -> {
 			Intent intent = new Intent(Intent.ACTION_VIEW,
-			Uri.parse(c1qwR3oIn0.elpis(c1qwR3oIn0.LeonSKenedey("21676721212167212121676721216767216721216767672121676767672167212167672121672121212167672121676721672167212121672121676767212167216721216721676721672121212167672167672167212121216767216721676721676721212167212121676721216721216721676721672121676767672167212167212167216767216721676721212121672121212167212167676721676721216721676721672121676721676767212167212167676721212167672121212121672167672167212167672167676721216767212167212121216767212167672167212167216767216721672167676721672167212167212167672167676767216767212121216721676721672121672167672167212121216721216767676721676721212167212121676721212121216721216767216721676767672121212167216721216767212167672121212121216767212121672167672167216767216721676721216721216767212167672121676721212167216721672121676721676721216721212167672167216767216721212121216721216767212121672167216721676721216767216721676721676767212121212167216767212121216721672167212121672121216767672167672167212121216767676721216721672167212121672167216721672167216721216767672121672167216721672167212167676767216721216721212121672167212121672121676721676721216721676721672121672121216767672167676721216767216767216721212121676721216721212167676767216721216767672121212121676721676721672167212167212167216721672167676721676767212121212167676721216721216767212121676721676721672167212167672167676767212167672121216721672121672121672167216721676767216721676721672121676767212121672167672121216767216721672167212121676721676767672121676721216721"))));
+			Uri.parse("https://whatsapp.com/channel/0029Vb8f4WqCcW4mEbcYNT1c");
 			startActivity(intent);
 		});
 		
@@ -791,7 +791,7 @@ itemsetting_language_value = findViewById(R.id.itemsetting_language_value);
 		appearanceitem_palette.setOnClickListener(_v -> tampilkanColorPickerDialog());
 		
         itemsetting_language.setOnClickListener(_v ->
-	LanguageMenu.show(MainActivity.this, themeHelper, LanguageMenu.saved(user), code -> applyLanguage(code)));
+    	LanguageMenu.show(MainActivity.this, themeHelper, LanguageMenu.saved(user), code -> applyLanguage(code)));
     
 		switch_moduleinstall.setOnCheckedChangeListener((_buttonView, _isChecked) -> {
 			user.edit().putBoolean("onmodule", _isChecked).apply();
