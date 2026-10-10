@@ -2962,10 +2962,10 @@ itemsetting_language_value.setText(LanguageMenu.nameOf(LanguageMenu.saved(user))
 		else if (inoka.isBinderReady()) status = LanguageLoader.get("act_status_shizuku_perm", "Shizuku permission needed");
 		else status = LanguageLoader.get("act_status_shizuku_off", "Shizuku is not running");
 		
-		ActivationDialog.show(MainActivity.this, status, ready, new ActivationDialog.Callback() {
-			@Override public void onShizuku() { startShizukuActivation(); }
+        ActivationDialog.show(MainActivity.this, k -> themeHelper.getColor(k), status, ready, new ActivationDialog.Callback() {
+            @Override public void onShizuku() { startShizukuActivation(); }
 			@Override public void onWireless() { startWirelessActivation(); }
-		});
+        });
 	}
 	
 	private void startWirelessActivation() {
