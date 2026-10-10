@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="icon/senseix.png" alt="SenseiX Icon" width="140" height="140" />
+<img src="icon/SenseiX.png" alt="SenseiX Icon" width="140" height="140" />
 
 # SenseiX
 
