@@ -62,7 +62,7 @@ public final class WirelessActivator {
 
     public void start() {
         if (Build.VERSION.SDK_INT < 30) {
-            cb.onFailed("Wireless debugging butuh Android 11 atau lebih baru");
+            cb.onFailed(LanguageLoader.get("act_needs_android11", "Wireless debugging requires Android 11 or newer"));
             return;
         }
         waiting = true;
@@ -76,8 +76,13 @@ public final class WirelessActivator {
                         @Override public void run() {
                             if (!waiting) return;
                             if (ok) done();
-                            else {
-                                cb.onLog("info: pairing lama tidak berlaku / Wireless debugging mati, pairing baru...");
+                            else if (!wirelessEnabled()) {
+                                // Pairing masih tersimpan, hanya Wireless debugging yang mati: tidak perlu pairing ulang.
+                                // waiting tetap true, recheck() di onResume yang menyelesaikan setelah dinyalakan.
+                                cb.onLog("hint: " + LanguageLoader.get("act_wireless_off_hint", "Wireless debugging is off. Turn it on, then come back to the app (no re-pairing needed)."));
+                                openWirelessDebugging();
+                            } else {
+                                cb.onLog("info: pairing lama tidak berlaku, pairing baru...");
                                 requestNotifThenPair();
                             }
                         }
@@ -119,7 +124,7 @@ public final class WirelessActivator {
             beginPairing();
         } else {
             waiting = false;
-            cb.onFailed("Izin notifikasi diperlukan untuk memasukkan kode pairing");
+            cb.onFailed(LanguageLoader.get("act_notif_permission", "Notification permission is required to enter the pairing code"));
         }
     }
 
@@ -128,6 +133,15 @@ public final class WirelessActivator {
     private void done() {
         waiting = false;
         cb.onActivated();
+    }
+
+    /** Status toggle Wireless debugging di sistem. Kalau tidak terbaca, anggap nyala (perilaku lama). */
+    private boolean wirelessEnabled() {
+        try {
+            return Settings.Global.getInt(act.getContentResolver(), "adb_wifi_enabled", 0) == 1;
+        } catch (Throwable t) {
+            return true;
+        }
     }
 
     private void requestNotifThenPair() {

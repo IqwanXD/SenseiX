@@ -49,6 +49,20 @@
 						android:textColor="#E3F2FD" />
 				</LinearLayout>
 				<ImageView
+					android:id="@+id/powerbtn"
+					android:layout_width="35dp"
+					android:layout_height="35dp"
+					android:layout_marginLeft="8dp"
+					android:layout_marginTop="8dp"
+					android:layout_marginRight="0dp"
+					android:layout_marginBottom="8dp"
+					android:padding="4dp"
+					android:background="?android:attr/selectableItemBackgroundBorderless"
+					android:src="@drawable/icon_power"
+					android:scaleType="fitXY"
+					android:tint="#FFFFFF"
+					android:focusable="true" />
+				<ImageView
 					android:id="@+id/infobtn"
 					android:layout_width="35dp"
 					android:layout_height="35dp"

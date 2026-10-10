@@ -103,6 +103,11 @@ public class LanguageLoader {
 		return get(key, key);
 	}
 
+	/** True kalau data bahasa sudah dimuat (dipakai Activity lain seperti SengameActivity). */
+	public static boolean isLoaded() {
+		return !data.isEmpty();
+	}
+
 	public static String currentPath() {
 		return currentPath;
 	}

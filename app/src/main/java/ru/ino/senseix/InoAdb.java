@@ -77,6 +77,9 @@ public final class InoAdb {
         sLoaded = true;
     }
 
+    /** Teks dari assets/languages (fallback Inggris). */
+    static String tr(String key, String fallback) { return LanguageLoader.get(key, fallback); }
+
     public static void setDeviceName(String name) { if (name != null && name.length() > 0) sDeviceName = name; }
     public static String getDeviceName() { return sDeviceName; }
 
@@ -101,6 +104,15 @@ public final class InoAdb {
         AdbKey.sCache = null;
         prefs(c).edit().remove("key_priv").remove("key_pub").remove("key_cert")
                 .remove("paired").remove("host").remove("port").apply();
+    }
+
+    /**
+     * Matikan layanan ADB di sisi app: hentikan InoService (pencarian pairing + notifikasi).
+     * Kunci RSA, status "paired" dan endpoint terakhir TETAP disimpan, jadi aktifkan lagi
+     * cukup lewat dialog aktivasi, tanpa pairing ulang. Tidak mengubah pengaturan sistem.
+     */
+    public static void stop(Context c) {
+        InoService.stop(c);
     }
 
     // ------------------------------------------------------------------ native binding
@@ -278,7 +290,7 @@ public final class InoAdb {
 
             writePacket(os, 0, pc.msg());                       // SPAKE2_MSG
             byte[] their = readPacket(in, 0);
-            if (!pc.initCipher(their)) throw new IOException("SPAKE2 gagal (kode salah?)");
+            if (!pc.initCipher(their)) throw new IOException(tr("adb_err_wrong_code", "Pairing failed (wrong code?)"));
             out.line("info: spake2 ok");
 
             byte[] pi = new byte[8192];                         // PeerInfo: type(1) + data(8191)
@@ -291,7 +303,7 @@ public final class InoAdb {
 
             byte[] peerEnc = readPacket(in, 1);
             byte[] peer = pc.decrypt(peerEnc);
-            if (peer == null) throw new IOException("kode pairing salah");
+            if (peer == null) throw new IOException(tr("adb_err_wrong_code", "Pairing failed (wrong code?)"));
             out.line("info: peer info ok");
             markPaired(ctx);
         } finally {
@@ -435,7 +447,7 @@ public final class InoAdb {
                         m = c.read();
                     }
                 }
-                if (m.cmd != A_CNXN) throw new IOException("handshake ADB gagal (cmd=0x" + Integer.toHexString(m.cmd) + ")");
+                if (m.cmd != A_CNXN) throw new IOException(tr("adb_err_handshake", "ADB handshake failed") + " (cmd=0x" + Integer.toHexString(m.cmd) + ")");
                 return c;
             } catch (Exception e) {
                 c.close();
@@ -452,7 +464,7 @@ public final class InoAdb {
             write(A_OPEN, local, 0, (service + "\0").getBytes(StandardCharsets.UTF_8));
             Msg m = read();
             while (m.cmd != A_OKAY && m.cmd != A_CLSE) m = read();
-            if (m.cmd == A_CLSE) throw new IOException("layanan ditolak: " + service);
+            if (m.cmd == A_CLSE) throw new IOException(String.format(tr("adb_err_service_refused", "Service refused: %s"), service));
             int remote = m.arg0;
             ByteArrayOutputStream bo = new ByteArrayOutputStream();
             while (true) {
@@ -497,7 +509,7 @@ public final class InoAdb {
             int o = 0;
             while (o < n) {
                 int k = in.read(r, o, n - o);
-                if (k < 0) throw new IOException("koneksi ditutup");
+                if (k < 0) throw new IOException(tr("adb_err_connection_closed", "Connection closed"));
                 o += k;
             }
             return r;

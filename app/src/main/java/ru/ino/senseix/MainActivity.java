@@ -78,6 +78,7 @@ public class MainActivity extends Activity {
 	private FrameLayout viewpagerbg;
 	private LinearLayout titlebar_mainscreen;
 	private ImageView infobtn;
+	private ImageView powerbtn;
 	private ImageView settingbtn;
 	private TextView currentview_title;
 	private TextView currentview_subtitle;
@@ -274,6 +275,7 @@ private TextView itemsetting_language_value;
 		viewpagerbg = findViewById(R.id.viewpagerbg);
 		titlebar_mainscreen = findViewById(R.id.titlebar_mainscreen);
 		infobtn = findViewById(R.id.infobtn);
+		powerbtn = findViewById(R.id.powerbtn);
 		settingbtn = findViewById(R.id.settingbtn);
 		currentview_title = findViewById(R.id.currentview_title);
 		currentview_subtitle = findViewById(R.id.currentview_subtitle);
@@ -451,6 +453,7 @@ itemsetting_language_value = findViewById(R.id.itemsetting_language_value);
 		user = getSharedPreferences("data", Activity.MODE_PRIVATE);
 		
 		infobtn.setOnClickListener(_v -> showCustomBottomSheet());
+		powerbtn.setOnClickListener(_v -> confirmTurnOffService());
 		
 		settingbtn.setOnClickListener(_v -> {
 			fromShell = "false";
@@ -624,7 +627,7 @@ itemsetting_language_value = findViewById(R.id.itemsetting_language_value);
 			}
 			
 			if (shell_input.getText().toString().equals("clear")) {
-				shell_output.setText("Use shell command, at your own risk.\n");
+				shell_output.setText(LanguageLoader.get("shell_output", "Use shell command, at your own risk.\n"));
 			} else {
 				if (shell_input.getText().toString().equals("wm size reset")) {
 					inputwidth.getEditText().setText("");
@@ -889,6 +892,7 @@ itemsetting_language_value = findViewById(R.id.itemsetting_language_value);
 			} catch (Exception e) {
 				hasShizukuPermission = inoka.isWirelessActive();
 			}
+			if (inoka.isUserOff()) hasShizukuPermission = false; // layanan dimatikan lewat tombol power
 			
 			// 2. Cek Izin Shizuku terlebih dahulu
 			if (!hasShizukuPermission) {
@@ -943,6 +947,7 @@ itemsetting_language_value = findViewById(R.id.itemsetting_language_value);
 			} catch (Exception e) {
 				hasShizukuPermission = inoka.isWirelessActive();
 			}
+			if (inoka.isUserOff()) hasShizukuPermission = false; // layanan dimatikan lewat tombol power
 			
 			// 2. Jika TIDAK ada izin Shizuku, minta izin atau tampilkan akses ditolak
 			if (!hasShizukuPermission) {
@@ -1010,6 +1015,7 @@ itemsetting_language_value = findViewById(R.id.itemsetting_language_value);
 			} catch (Exception e) {
 				hasShizukuPermission = inoka.isWirelessActive();
 			}
+			if (inoka.isUserOff()) hasShizukuPermission = false; // layanan dimatikan lewat tombol power
 			
 			// 2. Cek Izin Shizuku terlebih dahulu
 			if (!hasShizukuPermission) {
@@ -1059,6 +1065,7 @@ itemsetting_language_value = findViewById(R.id.itemsetting_language_value);
 			} catch (Exception e) {
 				hasShizukuPermission = inoka.isWirelessActive();
 			}
+			if (inoka.isUserOff()) hasShizukuPermission = false; // layanan dimatikan lewat tombol power
 			
 			// 2. Jika TIDAK ada izin Shizuku, minta izin atau tampilkan akses ditolak
 			if (!hasShizukuPermission) {
@@ -1661,6 +1668,7 @@ itemsetting_language_value.setText(LanguageMenu.nameOf(LanguageMenu.saved(user))
 					currentview_title.setText(LanguageLoader.get("page_home_title"));
 					currentview_subtitle.setText(LanguageLoader.get("page_home_subtitle"));
 					infobtn.setVisibility(View.VISIBLE);
+					powerbtn.setVisibility(View.VISIBLE);
 					settingbtn.setVisibility(View.GONE);
 					actionbtn.setVisibility(View.VISIBLE);
 					actionbtn.setImageResource(R.drawable.icon_terminal);
@@ -1675,6 +1683,7 @@ itemsetting_language_value.setText(LanguageMenu.nameOf(LanguageMenu.saved(user))
 					currentview_title.setText(LanguageLoader.get("page_apps_title"));
 					currentview_subtitle.setText(LanguageLoader.get("page_apps_subtitle"));
 					infobtn.setVisibility(View.GONE);
+					powerbtn.setVisibility(View.GONE);
 					settingbtn.setVisibility(View.GONE);
 					sengame_openbtn.setVisibility(View.VISIBLE);
 					actionbtn.animate()
@@ -1699,6 +1708,7 @@ itemsetting_language_value.setText(LanguageMenu.nameOf(LanguageMenu.saved(user))
 					currentview_title.setText(LanguageLoader.get("page_module_title"));
 					currentview_subtitle.setText(LanguageLoader.get("page_module_subtitle"));
 					infobtn.setVisibility(View.GONE);
+					powerbtn.setVisibility(View.GONE);
 					settingbtn.setVisibility(View.VISIBLE);
 					actionbtn.setVisibility(View.VISIBLE);
 					actionbtn.setImageResource(R.drawable.icon_upload);
@@ -1812,17 +1822,15 @@ itemsetting_language_value.setText(LanguageMenu.nameOf(LanguageMenu.saved(user))
 			boolean isIgnoringOptimizations = pm.isIgnoringBatteryOptimizations(getPackageName());
 			
 			if (!isIgnoringOptimizations) {
-				String pesanBaterai = "To ensure the PING and FPS indicators run smoothly while gaming or in the background, please set SenseiX battery usage to 'Unrestricted'.\n\n" +
-				"Steps after tapping the button below:\n" +
-				"1. Select the 'Battery' menu.\n" +
-				"2. Change from 'Optimized' to 'Unrestricted'.";
+				String pesanBaterai = LanguageLoader.get("battery_message",
+				"To ensure the PING and FPS indicators run smoothly while gaming or in the background, please set SenseiX battery usage to 'Unrestricted'.");
 				
 				tampilkanDialogKustom(
-				"Background Permission",
-				"Battery Optimization Detected",
+				LanguageLoader.get("battery_title", "Background Permission"),
+				LanguageLoader.get("battery_subtitle", "Battery Optimization Detected"),
 				pesanBaterai,
-				"Cancel",
-				"Open Settings",
+				LanguageLoader.get("btn_cancel", "Cancel"),
+				LanguageLoader.get("btn_open_settings", "Open Settings"),
 				() -> {}, // Aksi jika batal
 				() -> {
 					try {
@@ -2382,7 +2390,7 @@ itemsetting_language_value.setText(LanguageMenu.nameOf(LanguageMenu.saved(user))
 				if (showShellScreen) {
 					shell_output.append("[-] Failed to create output directory: " + outputDir.getAbsolutePath() + "\n");
 				} else {
-					Toast.makeText(getApplicationContext(), "Gagal membuat folder tujuan.", Toast.LENGTH_SHORT).show();
+					Toast.makeText(getApplicationContext(), LanguageLoader.get("err_create_folder", "Failed to create the destination folder."), Toast.LENGTH_SHORT).show();
 				}
 				return;
 			}
@@ -2437,7 +2445,7 @@ itemsetting_language_value.setText(LanguageMenu.nameOf(LanguageMenu.saved(user))
 					if (showShellScreen) {
 						shell_output.append("\n\n[-] Extraction failed: " + errorMsg + "\n");
 					} else {
-						Toast.makeText(getApplicationContext(), "Gagal Ekstrak: " + errorMsg, Toast.LENGTH_LONG).show();
+						Toast.makeText(getApplicationContext(), String.format(LanguageLoader.get("err_extract", "Extraction failed: %s"), errorMsg), Toast.LENGTH_LONG).show();
 					}
 				});
 			}
@@ -2576,6 +2584,7 @@ itemsetting_language_value.setText(LanguageMenu.nameOf(LanguageMenu.saved(user))
 		
 		ImageView[] btnIcon = {
 			infobtn, 
+			powerbtn,
 			morebtn,
 			settingbtn,
 			exec_button,
@@ -2597,6 +2606,7 @@ itemsetting_language_value.setText(LanguageMenu.nameOf(LanguageMenu.saved(user))
 		//=== RIPPLE ICON ===
 		int[] rippleButtonIds = {
 			R.id.infobtn,
+			R.id.powerbtn,
 			R.id.settingbtn,
 			R.id.clearbutton,
 			R.id.morebtn,
@@ -2964,6 +2974,7 @@ itemsetting_language_value.setText(LanguageMenu.nameOf(LanguageMenu.saved(user))
 		wireless = new WirelessActivator(this, new WirelessActivator.Listener() {
 			@Override public void onLog(String line) {
 				if (line.startsWith("error:")) Toast.makeText(MainActivity.this, line, Toast.LENGTH_LONG).show();
+				else if (line.startsWith("hint:")) Toast.makeText(MainActivity.this, line.substring(5).trim(), Toast.LENGTH_LONG).show();
 			}
 			@Override public void onActivated() {
 				inoka.setWirelessActive(true);
@@ -2982,6 +2993,35 @@ itemsetting_language_value.setText(LanguageMenu.nameOf(LanguageMenu.saved(user))
 		if (wireless != null) wireless.onRequestPermissionsResult(requestCode, permissions, grantResults);
 	}
 	
+	/** Tombol power: konfirmasi lalu matikan layanan aktif (Shizuku / Wireless) -> SenseiX offline. */
+	private void confirmTurnOffService() {
+		if (inoka == null || !inoka.isActivated()) {
+			Toast.makeText(this, LanguageLoader.get("power_toast_already_off", "SenseiX is already offline."), Toast.LENGTH_SHORT).show();
+			return;
+		}
+		tampilkanDialogKustom(
+		LanguageLoader.get("power_dialog_title", "Turn Off Service"),
+		LanguageLoader.get("dialog_confirm_action", "Confirm Action"),
+		LanguageLoader.get("power_dialog_message", "SenseiX will go offline and stop using the active service."),
+		LanguageLoader.get("btn_cancel", "Cancel"),
+		LanguageLoader.get("power_btn_off", "Turn Off"),
+		() -> {},
+		() -> turnOffService()
+		);
+	}
+
+	private void turnOffService() {
+		if (wireless != null) wireless.cancel(); // hentikan aktivasi wireless yang sedang menunggu
+		new Thread(() -> {
+			inoka.deactivate();
+			runOnUiThread(() -> {
+				lastState = -1;
+				checkAndUpdateStatus();
+				Toast.makeText(MainActivity.this, LanguageLoader.get("power_toast_off", "Service turned off. SenseiX is offline."), Toast.LENGTH_SHORT).show();
+			});
+		}).start();
+	}
+
 	/** Aktivasi lewat Shizuku (alur lama dari activationbg). */
 	private void startShizukuActivation() {
 		inoka.selectShizukuMode();
@@ -3028,7 +3068,7 @@ itemsetting_language_value.setText(LanguageMenu.nameOf(LanguageMenu.saved(user))
 						if (intent != null) {
 							startActivity(intent);
 						} else {
-							Toast.makeText(MainActivity.this, "Shizuku App tidak ditemukan!", Toast.LENGTH_SHORT).show();
+							Toast.makeText(MainActivity.this, LanguageLoader.get("shizuku_app_not_found", "Shizuku app not found!"), Toast.LENGTH_SHORT).show();
 						}
 						return;
 					}
@@ -3042,8 +3082,8 @@ itemsetting_language_value.setText(LanguageMenu.nameOf(LanguageMenu.saved(user))
 					// 3. Jika Binder Ready DAN Permission sudah Granted
 					activationbg.setEnabled(false);
 					
-					activation_title.setText("SenseiX is Online");
-					activation_subtitle.setText("Service was activated!");
+					activation_title.setText(LanguageLoader.get("status_online_title", "SenseiX is Online"));
+					activation_subtitle.setText(LanguageLoader.get("status_online_subtitle", "Service was activated!"));
 					activation_icon.setImageResource(R.drawable.app_icon);
 					
 					setGradientRipple(
@@ -3078,8 +3118,11 @@ itemsetting_language_value.setText(LanguageMenu.nameOf(LanguageMenu.saved(user))
 	private void checkAndUpdateStatus() {
 		boolean isChanged = false;
 		
-		if (inoka.isWirelessActive() || inoka.isBinderReady()) {
-			if (inoka.isWirelessActive() || inoka.isPermissionGranted()) {
+		boolean off = inoka.isUserOff();
+		if (powerbtn != null) powerbtn.setAlpha(inoka.isActivated() ? 1f : 0.35f);
+
+		if (off || inoka.isWirelessActive() || inoka.isBinderReady()) {
+			if (!off && (inoka.isWirelessActive() || inoka.isPermissionGranted())) {
 				activationbg.setEnabled(false);
 				
 				int targetColor = (themeHelper != null) ? themeHelper.getColor("colorPrimary") : 0xFF0D47A1;
