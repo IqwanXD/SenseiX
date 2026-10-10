@@ -88,6 +88,9 @@ public class InoService extends Service {
 
     private static final ExecutorService EXEC = Executors.newSingleThreadExecutor();
 
+    /** Teks dari assets/languages (fallback Inggris). */
+    private static String tr(String key, String fallback) { return LanguageLoader.get(key, fallback); }
+
     // ------------------------------------------------------------------ API statis (sinkron)
 
     /** Port pairing terakhir. Port ini tidak pernah valid untuk connect. */
@@ -209,7 +212,7 @@ public class InoService extends Service {
         }
         // Sumber 2: mDNS. Entri bisa basi (cache), jadi tiap kandidat diuji dulu dan yang ditolak dilewati.
         String[] f = findConnectEndpoint(ctx, log, mdnsTimeoutMs);
-        if (f == null) throw new java.io.IOException("layanan wireless debugging tidak ditemukan (aktifkan dan sambung ke Wi-Fi)");
+        if (f == null) throw new java.io.IOException(tr("adb_err_not_found", "Wireless debugging service not found (turn it on and connect to Wi-Fi)"));
         log.line("info: mDNS found " + f[0] + ":" + f[1]);
         int p = Integer.parseInt(f[1]);
         InoAdb.Client c = InoAdb.Client.connect(ctx, f[0], p, log);
@@ -402,7 +405,7 @@ public class InoService extends Service {
             handleReply(i);
         } else {
             ensureChannel();
-            startFg(build("Mencari layanan pairing (Wi-Fi + Wireless debugging harus aktif)...", false, true));
+            startFg(build(tr("adb_notif_searching", "Looking for the pairing service (Wi-Fi and Wireless debugging must be on)..."), false, true));
             startDiscovery();
         }
         return START_NOT_STICKY;
@@ -417,18 +420,18 @@ public class InoService extends Service {
                 pHost = host;
                 pPort = port;
                 new Log().line("info: layanan pairing ditemukan " + host + ":" + port);
-                notifyNow(build("Ketik kode 6 digit dari Wireless debugging.", true, true));
+                notifyNow(build(tr("adb_notif_enter_code", "Type the 6-digit code from Wireless debugging."), true, true));
             }
             public void onLost(int port) {
                 if (pPort == port) {
                     pHost = null;
                     new Log().line("info: layanan pairing hilang (dialog kode pairing ditutup)");
-                    notifyNow(build("Dialog kode pairing tertutup. Buka lagi \"Pairkan perangkat dengan kode pairing\".", false, true));
+                    notifyNow(build(tr("adb_notif_dialog_closed", "The pairing code dialog was closed. Open \"Pair device with pairing code\" again."), false, true));
                 }
             }
         });
         try { discovery.start(TYPE_PAIRING); }
-        catch (Throwable t) { notifyNow(build("mDNS gagal: " + t.getMessage(), false, false)); }
+        catch (Throwable t) { notifyNow(build(String.format(tr("adb_notif_mdns_failed", "mDNS failed: %s"), t.getMessage()), false, false)); }
     }
 
     private void stopDiscovery() {
@@ -440,15 +443,15 @@ public class InoService extends Service {
         CharSequence cs = r == null ? null : r.getCharSequence(KEY_CODE);
         final String code = cs == null ? "" : cs.toString().replaceAll("\\s", "");
         if (pHost == null) {
-            notifyNow(build("Layanan pairing belum ditemukan. Buka Wireless debugging > Pairing code.", false, true));
+            notifyNow(build(tr("adb_notif_not_found", "Pairing service not found yet. Open Wireless debugging > Pairing code."), false, true));
             return;
         }
         if (!code.matches("\\d{6}")) {
-            notifyNow(build("Kode harus 6 digit. Coba lagi.", true, true));
+            notifyNow(build(tr("adb_notif_code_invalid", "The code must be 6 digits. Try again."), true, true));
             return;
         }
         // Jangan pindah ke aplikasi dulu: meninggalkan Pengaturan menutup dialog kode pairing (port langsung mati).
-        notifyNow(build("Memasangkan...", false, true));
+        notifyNow(build(tr("adb_notif_pairing", "Pairing..."), false, true));
         final String host = pHost;
         final int port = pPort;
         final Context ctx = getApplicationContext();
@@ -460,18 +463,17 @@ public class InoService extends Service {
                     if (last.contains("ECONNREFUSED") || last.contains("failed to connect")) {
                         // Port basi: dialog kode pairing sudah ditutup / port berganti. Tunggu layanan baru.
                         pHost = null;
-                        notifyNow(build("Port pairing tidak aktif (dialog kode pairing tertutup). "
-                                + "Buka lagi \"Pairkan perangkat dengan kode pairing\", notifikasi ini akan berubah.", false, true));
+                        notifyNow(build(tr("adb_notif_port_inactive", "The pairing port is not active (pairing code dialog closed). Open \"Pair device with pairing code\" again; this notification will update."), false, true));
                     } else {
-                        notifyNow(build("Gagal: " + last + " - masukkan kode lagi.", true, true));
+                        notifyNow(build(String.format(tr("adb_notif_failed", "Failed: %s - enter the code again."), last), true, true));
                     }
                     return;
                 }
-                notifyNow(build("Pairing berhasil, menyambung...", false, true));
+                notifyNow(build(tr("adb_notif_pair_ok", "Pairing succeeded, connecting..."), false, true));
                 Result c = connect(ctx, null, 0);
                 stopDiscovery();
-                notifyNow(build(c.ok ? "Tersambung sebagai " + InoAdb.getDeviceName()
-                        : "Pairing OK, connect gagal: " + lastLine(c.output), false, false));
+                notifyNow(build(c.ok ? String.format(tr("adb_notif_connected", "Connected as %s"), InoAdb.getDeviceName())
+                        : String.format(tr("adb_notif_connect_failed", "Pairing OK, connection failed: %s"), lastLine(c.output)), false, false));
                 stopForeground(false);
                 stopSelf();
                 bringAppToFront(); // pairing + connect selesai: sekarang aman pindah ke aplikasi
@@ -487,13 +489,13 @@ public class InoService extends Service {
     private void ensureChannel() {
         if (Build.VERSION.SDK_INT < 26) return;
         NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        nm.createNotificationChannel(new NotificationChannel(CHANNEL, "Wireless ADB pairing", NotificationManager.IMPORTANCE_HIGH));
+        nm.createNotificationChannel(new NotificationChannel(CHANNEL, tr("adb_notif_channel", "Wireless ADB pairing"), NotificationManager.IMPORTANCE_HIGH));
     }
 
     private Notification build(String text, boolean withReply, boolean ongoing) {
         Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(this, CHANNEL) : new Notification.Builder(this);
         b.setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
-                .setContentTitle(withReply ? "Layanan pairing ditemukan" : "InoAdb")
+                .setContentTitle(withReply ? tr("adb_notif_title_found", "Pairing service found") : "InoAdb")
                 .setContentText(text)
                 .setStyle(new Notification.BigTextStyle().bigText(text))
                 .setOngoing(ongoing)
@@ -507,19 +509,19 @@ public class InoService extends Service {
 
         if (withReply) {
             // Hanya satu aksi (kolom input), seperti Shizuku, supaya One UI menampilkan kolomnya langsung.
-            RemoteInput ri = new RemoteInput.Builder(KEY_CODE).setLabel("Kode pairing").build();
+            RemoteInput ri = new RemoteInput.Builder(KEY_CODE).setLabel(tr("adb_action_code_label", "Pairing code")).build();
             PendingIntent pi = PendingIntent.getService(this, 1,
                     new Intent(this, InoService.class).setAction(ACTION_REPLY),
                     PendingIntent.FLAG_UPDATE_CURRENT | mut);
             b.addAction(new Notification.Action.Builder(
-                    Icon.createWithResource(this, android.R.drawable.ic_menu_edit), "Masukkan kode pairing", pi)
+                    Icon.createWithResource(this, android.R.drawable.ic_menu_edit), tr("adb_action_enter_code", "Enter pairing code"), pi)
                     .addRemoteInput(ri).build());
         } else if (ongoing) {
             PendingIntent stop = PendingIntent.getService(this, 2,
                     new Intent(this, InoService.class).setAction(ACTION_STOP),
                     PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
             b.addAction(new Notification.Action.Builder(
-                    Icon.createWithResource(this, android.R.drawable.ic_menu_close_clear_cancel), "Berhenti mencari", stop).build());
+                    Icon.createWithResource(this, android.R.drawable.ic_menu_close_clear_cancel), tr("adb_action_stop", "Stop searching"), stop).build());
         }
         return b.build();
     }

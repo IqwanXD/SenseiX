@@ -139,23 +139,21 @@ public class SengameActivity extends Activity {
 		// SET BACKGROUND: Mengganti background item terpilih, ATAU background default jika belum milih
 		setbtn.setOnClickListener(_v -> {
 			Intent pickIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-			Intent chooserIntent = Intent.createChooser(pickIntent, "Pilih Gambar Background");
+			Intent chooserIntent = Intent.createChooser(pickIntent, LanguageLoader.get("sengame_pick_bg", "Choose background image"));
 			startActivityForResult(chooserIntent, 2167);
 		});
 		
 		playbtn.setOnClickListener(_v -> {
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(SengameActivity.this)) {
-				String pesanIzinOverlay = "SenseiX requires the 'Display over other apps' permission to allow performance optimization and real-time overlays to function smoothly in the background.\n\n" +
-				"• Displays real-time performance stats\n" +
-				"• Prevents the optimization process from being terminated by the system\n" +
-				"• Completely safe and does not collect any personal data";
+				String pesanIzinOverlay = LanguageLoader.get("overlay_message",
+				"SenseiX requires the 'Display over other apps' permission to allow performance optimization and real-time overlays to function smoothly in the background.");
 				
 				tampilkanDialogKustom(
-				"Permission Required",
-				"Display Over Other Apps",
+				LanguageLoader.get("overlay_title", "Permission Required"),
+				LanguageLoader.get("overlay_subtitle", "Display Over Other Apps"),
 				pesanIzinOverlay,
-				"Cancel",
-				"Grant Permission",
+				LanguageLoader.get("btn_cancel", "Cancel"),
+				LanguageLoader.get("btn_grant_permission", "Grant Permission"),
 				() -> {},
 				() -> {
 					if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
@@ -279,6 +277,11 @@ public class SengameActivity extends Activity {
 		videosplash.setLoop(true);
 		videosplash.play();
 		user = getSharedPreferences("data", Activity.MODE_PRIVATE);
+		if (!LanguageLoader.isLoaded()) {
+			LanguageLoader.init(this);
+			LanguageMenu.load(this, user);
+		}
+		LanguageLoader.apply(this);
 		int warnaTemaTerpilih = user.getInt("color", Color.parseColor("#0D57A1"));
 		themeHelper = new ru.ino.senseix.DynamicThemeHelper(); 
 		themeHelper.generateFromBaseColor(warnaTemaTerpilih);

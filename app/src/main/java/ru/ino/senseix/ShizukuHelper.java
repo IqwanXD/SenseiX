@@ -53,6 +53,8 @@ public class ShizukuHelper {
 	private static final String PREF = "senseix_activation";
 	private static final String RC_TAG = "__INO_RC__";
 	private volatile boolean wirelessActive = false;
+	/** Pengguna mematikan layanan lewat tombol power: SenseiX dianggap offline walau Shizuku masih hidup. */
+	private volatile boolean userOff = false;
 	private volatile boolean wirelessCancelled = false;
 	private volatile InoAdb.Client wirelessClient;
 	private volatile boolean restoring = false;
@@ -75,6 +77,7 @@ public class ShizukuHelper {
 		this.tmpDir = activity.getCacheDir().getAbsolutePath();
 		this.currentDir = homeDir;
 		
+		this.userOff = activity.getSharedPreferences(PREF, Activity.MODE_PRIVATE).getBoolean("off", false);
 		registerListeners();
 		checkInitialState();
 	}
@@ -94,36 +97,60 @@ public class ShizukuHelper {
 		Shizuku.addBinderDeadListener(() -> {
 			binderReady = false;
 			permissionGranted = false;
-			toast("Shizuku Dead");
+			toast(LanguageLoader.get("shizuku_dead", "Shizuku stopped"));
 		});
 		
 		Shizuku.addRequestPermissionResultListener((code, result) -> {
 			permissionGranted = result == PackageManager.PERMISSION_GRANTED;
-			toast(permissionGranted ? "Shizuku permission granted" : "Shizuku permission denied");
+			toast(permissionGranted ? LanguageLoader.get("shizuku_perm_granted", "Shizuku permission granted") : LanguageLoader.get("shizuku_perm_denied", "Shizuku permission denied"));
 		});
 	}
 	
 	public boolean isBinderReady() { return binderReady; }
 	public boolean isPermissionGranted() { return permissionGranted; }
-	public boolean isShizukuReady() { return binderReady && permissionGranted; }
+	public boolean isShizukuReady() { return binderReady && permissionGranted && !userOff; }
 	public boolean isRunning() { return isRunning; }
 	
 	/* ================= MODE AKTIVASI ================= */
 	
-	public boolean isWirelessActive() { return wirelessActive; }
+	public boolean isWirelessActive() { return wirelessActive && !userOff; }
+
+	/** True kalau pengguna mematikan layanan (tombol power) dan belum mengaktifkannya lagi. */
+	public boolean isUserOff() { return userOff; }
 	
 	/** True kalau salah satu mode (Wireless atau Shizuku) siap menjalankan perintah. */
-	public boolean isActivated() { return wirelessActive || isShizukuReady(); }
+	public boolean isActivated() { return isWirelessActive() || isShizukuReady(); }
 	
 	public void setWirelessActive(boolean on) {
 		wirelessActive = on;
-		if (on) saveMode("wireless");
+		if (on) { clearOff(); saveMode("wireless"); }
 	}
 	
 	/** Dipanggil saat pengguna memilih Shizuku di dialog aktivasi. */
 	public void selectShizukuMode() {
 		wirelessActive = false;
+		clearOff();
 		saveMode("shizuku");
+	}
+
+	private void clearOff() {
+		userOff = false;
+		activity.getSharedPreferences(PREF, Activity.MODE_PRIVATE).edit().remove("off").apply();
+	}
+
+	/**
+	 * Matikan layanan yang aktif (Shizuku atau Wireless) -> SenseiX offline.
+	 * Pairing ADB TIDAK dihapus: aktifkan lagi cukup lewat dialog aktivasi. Panggil dari thread background.
+	 */
+	public void deactivate() {
+		userOff = true;
+		wirelessActive = false;
+		destroy();            // hentikan perintah yang sedang berjalan + tutup klien ADB
+		InoAdb.stop(activity); // hentikan InoService (pencarian pairing + notifikasi)
+		activity.getSharedPreferences(PREF, Activity.MODE_PRIVATE).edit()
+			.remove("mode")          // jangan dipulihkan otomatis oleh restoreSavedMode()
+			.putBoolean("off", true)
+			.apply();
 	}
 	
 	private void saveMode(String m) {
@@ -132,7 +159,7 @@ public class ShizukuHelper {
 	
 	/** Kalau mode terakhir Wireless, coba sambung diam-diam (tanpa UI). Aman dipanggil berulang. */
 	public void restoreSavedMode() {
-		if (wirelessActive || restoring) return;
+		if (userOff || wirelessActive || restoring) return;
 		if (Build.VERSION.SDK_INT < 30) return;
 		if (!"wireless".equals(activity.getSharedPreferences(PREF, Activity.MODE_PRIVATE).getString("mode", ""))) return;
 		if (!InoAdb.isPaired(activity)) return;
@@ -163,7 +190,7 @@ public class ShizukuHelper {
 				c = InoService.openClient(activity, new InoAdb.Out() { public void line(String s) {} });
 			} catch (Exception e) {
 				wirelessActive = false; // Wireless debugging mati / tidak terjangkau
-				ui.post(() -> callback.onFinish("Wireless debugging disconnected : " + e.getMessage()));
+				ui.post(() -> callback.onFinish(String.format(LanguageLoader.get("wireless_disconnected", "Wireless debugging disconnected: %s"), e.getMessage())));
 				return;
 			}
 			wirelessClient = c;
@@ -202,11 +229,11 @@ public class ShizukuHelper {
 	
 	public void requestPermissionIfNeeded() {
 		if (!binderReady) {
-			toast("Shizuku is Inactive");
+			toast(LanguageLoader.get("shizuku_inactive", "Shizuku is not running"));
 			return;
 		}
 		if (Shizuku.isPreV11()) {
-			toast("Shizuku not supported (pre v11)");
+			toast(LanguageLoader.get("shizuku_unsupported", "Shizuku not supported (older than v11)"));
 			return;
 		}
 		if (!permissionGranted) {
@@ -234,7 +261,7 @@ public class ShizukuHelper {
 			targetFile.setExecutable(true, false);
 			return true;
 		} catch (Exception e) {
-			toast("Failed to write script file: " + e.getMessage());
+			toast(String.format(LanguageLoader.get("shizuku_script_fail", "Failed to write script file: %s"), e.getMessage()));
 			return false;
 		}
 	}
