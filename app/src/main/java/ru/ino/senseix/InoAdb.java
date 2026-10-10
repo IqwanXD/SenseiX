@@ -325,6 +325,16 @@ public final class InoAdb {
 
     private static synchronized void unblockHiddenApi() {
         if (sUnblocked) return;
+        // Cara 1 (andal di Android 9-15, termasuk targetSdk tinggi): library HiddenApiBypass.
+        try {
+            org.lsposed.hiddenapibypass.HiddenApiBypass.addHiddenApiExemptions("L");
+            sUnblocked = true;
+            sUnblockStatus = "berhasil (HiddenApiBypass)";
+            return;
+        } catch (Throwable t) {
+            sUnblockStatus = "HiddenApiBypass gagal: " + t + "; ";
+        }
+        // Cara 2 (cadangan): meta-reflection, hanya jalan di sebagian versi Android.
         try {
             Method forName = Class.class.getDeclaredMethod("forName", String.class);
             Method getDeclared = Class.class.getDeclaredMethod("getDeclaredMethod", String.class, Class[].class);
@@ -333,9 +343,9 @@ public final class InoAdb {
             Method setEx = (Method) getDeclared.invoke(vm, "setHiddenApiExemptions", new Class[]{String[].class});
             setEx.invoke(getRuntime.invoke(null), new Object[]{new String[]{"L"}});
             sUnblocked = true;
-            sUnblockStatus = "berhasil";
+            sUnblockStatus = "berhasil (meta-reflection)";
         } catch (Throwable t) {
-            sUnblockStatus = "gagal: " + t;
+            sUnblockStatus += "meta-reflection gagal: " + t;
         }
     }
 

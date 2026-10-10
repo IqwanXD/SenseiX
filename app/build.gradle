@@ -3,13 +3,13 @@ plugins {
 }
 
 android {
-	compileSdk 34
+	compileSdk 37
 	
 	defaultConfig {
 		applicationId "ru.ino.senseix"
 		namespace "ru.ino.senseix"
-		minSdkVersion 24
-		targetSdkVersion 34
+		minSdkVersion 21
+		targetSdkVersion 36
 		versionCode 8964
 		versionName "0.98.21"
 	}
