@@ -26,17 +26,22 @@ public final class ActivationDialog {
 
     private ActivationDialog() {}
 
+    /** Penghubung ke themeHelper tanpa perlu tahu nama kelasnya. */
+    public interface ColorSource {
+        int getColor(String key);
+    }
+
     public interface Callback {
         void onShizuku();
         void onWireless();
     }
 
     /**
-     * @param th            themeHelper dari MainActivity (ganti tipe ThemeHelper jika nama kelasmu beda)
+     * @param th            sumber warna, mis. k -> themeHelper.getColor(k)
      * @param shizukuStatus teks status Shizuku, mis. "Shizuku aktif" / "Shizuku belum berjalan"
      * @param shizukuOk     true = hijau, false = oranye (tetap bisa dipilih)
      */
-    public static Dialog show(final Activity a, final ThemeHelper th,
+    public static Dialog show(final Activity a, final ColorSource th,
                               String shizukuStatus, boolean shizukuOk, final Callback cb) {
         final Dialog dialog = new Dialog(a);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -158,7 +163,7 @@ public final class ActivationDialog {
 
     // ------------------------------------------------------------------ pembangun kartu
 
-    private static View card(Activity a, ThemeHelper th, float dp, Typeface font, Typeface bold,
+    private static View card(Activity a, ColorSource th, float dp, Typeface font, Typeface bold,
                              String title, String desc, String status, int statusColor,
                              boolean enabled, View.OnClickListener click) {
         LinearLayout c = new LinearLayout(a);
