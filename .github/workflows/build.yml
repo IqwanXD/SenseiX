@@ -21,10 +21,24 @@ jobs:
         with:
           gradle-version: 8.13
 
-      - name: Build debug APK
+      - name: Decode keystore
+        if: github.event_name != 'pull_request'
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > $RUNNER_TEMP/release_key.jks
+
+      - name: Build release APK
+        if: github.event_name != 'pull_request'
+        run: gradle assembleRelease --stacktrace
+        env:
+          KEYSTORE_PATH: ${{ runner.temp }}/release_key.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Build debug APK (PR)
+        if: github.event_name == 'pull_request'
         run: gradle assembleDebug --stacktrace
 
       - uses: actions/upload-artifact@v4
         with:
-          name: SenseiX-debug
-          path: app/build/outputs/apk/debug/*.apk
+          name: SenseiX
+          path: app/build/outputs/apk/*/*.apk
